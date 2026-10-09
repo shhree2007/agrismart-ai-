@@ -1,0 +1,87 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // 1. Global default deny catch-all
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // Global helper primitives
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() > 0 && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    function isAdmin() {
+      return isSignedIn() && (
+        (request.auth.token.email == "javanjalshreyash1@gmail.com" && request.auth.token.email_verified == true) ||
+        exists(/databases/$(database)/documents/admins/$(request.auth.uid))
+      );
+    }
+
+    // Validation blueprints
+    function isValidUserProfile(data) {
+      return data.userId is string && data.userId.size() <= 128 &&
+             data.email is string && data.email.size() <= 120 &&
+             (!('name' in data) || (data.name is string && data.name.size() <= 100)) &&
+             (!('holdingAcres' in data) || data.holdingAcres is number);
+    }
+
+    function isValidIrrigationZone(data) {
+      return data.zoneId is string && data.zoneId.size() <= 64 &&
+             data.name is string && data.name.size() <= 100 &&
+             data.valveState is bool;
+    }
+
+    // Collection matches
+    match /users/{userId} {
+      allow get: if isOwner(userId) || isAdmin();
+      allow list: if isAdmin();
+      allow create: if isOwner(userId) && isValidId(userId) && isValidUserProfile(incoming());
+      allow update: if (isOwner(userId) || isAdmin()) && isValidId(userId) && isValidUserProfile(incoming());
+      allow delete: if isAdmin();
+    }
+
+    match /telemetry/{telemetryId} {
+      allow read: if isSignedIn();
+      allow write: if isAdmin();
+    }
+
+    match /irrigation_zones/{zoneId} {
+      allow read: if isSignedIn();
+      allow create: if isAdmin() && isValidId(zoneId) && isValidIrrigationZone(incoming());
+      allow update: if (
+        isSignedIn() && isValidId(zoneId) && isValidIrrigationZone(incoming()) && (
+          isAdmin() ||
+          incoming().diff(existing()).affectedKeys().hasOnly(['valveState', 'status', 'updatedAt'])
+        )
+      );
+      allow delete: if isAdmin();
+    }
+
+    match /alerts/{alertId} {
+      allow read: if isSignedIn();
+      allow write: if isAdmin();
+    }
+
+    match /market_prices/{priceId} {
+      allow read: if isSignedIn();
+      allow write: if isAdmin();
+    }
+  }
+}

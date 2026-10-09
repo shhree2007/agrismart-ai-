@@ -1,0 +1,6 @@
+{
+  "name": "AgriSmart AI - Intelligent Stewardship",
+  "description": "Precision agricultural intelligence platform for crop disease detection, smart irrigation telemetry, microclimate risk advisory, and APMC mandi market prices.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

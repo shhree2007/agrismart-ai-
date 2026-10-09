@@ -1,0 +1,107 @@
+{
+  "entities": {
+    "UserProfile": {
+      "title": "UserProfile",
+      "description": "Registered farmer agronomic profile and land records",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string", "maxLength": 128 },
+        "name": { "type": "string", "maxLength": 100 },
+        "email": { "type": "string", "maxLength": 120 },
+        "phone": { "type": "string", "maxLength": 20 },
+        "location": { "type": "string", "maxLength": 100 },
+        "holdingAcres": { "type": "number" },
+        "pmKisanId": { "type": "string", "maxLength": 50 },
+        "preferredLanguage": { "type": "string", "enum": ["en", "mr", "hi"] },
+        "createdAt": { "type": "string" }
+      },
+      "required": ["userId", "email"]
+    },
+    "TelemetryReading": {
+      "title": "TelemetryReading",
+      "description": "In-situ field sensor telemetry including weather and soil metrics",
+      "type": "object",
+      "properties": {
+        "stationId": { "type": "string", "maxLength": 64 },
+        "temperature": { "type": "number" },
+        "humidity": { "type": "number" },
+        "soilMoisture": { "type": "number" },
+        "windSpeed": { "type": "number" },
+        "precipitation": { "type": "number" },
+        "uvIndex": { "type": "string", "maxLength": 30 },
+        "ndvi": { "type": "number" },
+        "recordedAt": { "type": "string" }
+      },
+      "required": ["stationId", "temperature", "humidity"]
+    },
+    "IrrigationZoneState": {
+      "title": "IrrigationZoneState",
+      "description": "Smart irrigation plot zone status and solenoid valve control state",
+      "type": "object",
+      "properties": {
+        "zoneId": { "type": "string", "maxLength": 64 },
+        "name": { "type": "string", "maxLength": 100 },
+        "crop": { "type": "string", "maxLength": 60 },
+        "status": { "type": "string", "enum": ["active", "scheduled", "off"] },
+        "soilMoisture": { "type": "number" },
+        "targetMoisture": { "type": "number" },
+        "lastRun": { "type": "string", "maxLength": 100 },
+        "nextRun": { "type": "string", "maxLength": 100 },
+        "valveState": { "type": "boolean" },
+        "updatedAt": { "type": "string" }
+      },
+      "required": ["zoneId", "name", "valveState"]
+    },
+    "AgriAlert": {
+      "title": "AgriAlert",
+      "description": "Agronomic disease and weather warning notifications",
+      "type": "object",
+      "properties": {
+        "alertId": { "type": "string", "maxLength": 64 },
+        "title": { "type": "string", "maxLength": 150 },
+        "description": { "type": "string", "maxLength": 500 },
+        "severity": { "type": "string", "enum": ["low", "medium", "high", "critical"] },
+        "sector": { "type": "string", "maxLength": 60 },
+        "status": { "type": "string", "enum": ["active", "resolved"] },
+        "createdAt": { "type": "string" }
+      },
+      "required": ["alertId", "title", "severity", "status"]
+    },
+    "CropPriceRecord": {
+      "title": "CropPriceRecord",
+      "description": "APMC mandi real-time commodity trading rates",
+      "type": "object",
+      "properties": {
+        "commodity": { "type": "string", "maxLength": 60 },
+        "market": { "type": "string", "maxLength": 80 },
+        "modalPrice": { "type": "number" },
+        "msp": { "type": "number" },
+        "trend": { "type": "string", "maxLength": 20 },
+        "updatedAt": { "type": "string" }
+      },
+      "required": ["commodity", "market", "modalPrice"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": { "$ref": "#/entities/UserProfile" },
+      "description": "User profile collection partitioned by userId"
+    },
+    "/telemetry/{telemetryId}": {
+      "schema": { "$ref": "#/entities/TelemetryReading" },
+      "description": "Field sensor telemetry series"
+    },
+    "/irrigation_zones/{zoneId}": {
+      "schema": { "$ref": "#/entities/IrrigationZoneState" },
+      "description": "Irrigation zone status and automated valve controls"
+    },
+    "/alerts/{alertId}": {
+      "schema": { "$ref": "#/entities/AgriAlert" },
+      "description": "Active agricultural advisories and alerts"
+    },
+    "/market_prices/{priceId}": {
+      "schema": { "$ref": "#/entities/CropPriceRecord" },
+      "description": "APMC mandi commodity pricing and trends"
+    }
+  }
+}
